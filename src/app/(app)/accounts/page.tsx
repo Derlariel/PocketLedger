@@ -12,8 +12,14 @@ export const metadata = { title: "บัญชี" };
 export default async function AccountsPage({ searchParams }: { searchParams: Promise<{ error?: string; message?: string }> }) {
   const params = await searchParams;
   const { supabase, userId } = await requireUser();
-  const { data, error } = await supabase.from("accounts").select("*,account_balances(balance_satangs,available_satangs)").eq("owner_id", userId).order("is_active", { ascending: false }).order("created_at");
+  const [accounts, balances] = await Promise.all([
+    supabase.from("accounts").select("*").eq("owner_id", userId).order("is_active", { ascending: false }).order("created_at"),
+    supabase.from("account_balances").select("account_id,balance_satangs,available_satangs").eq("owner_id", userId),
+  ]);
+  const error = accounts.error ?? balances.error;
   if (error) throw error;
+  const balanceByAccount = new Map(balances.data?.map((balance) => [balance.account_id, balance]));
+  const data = accounts.data?.map((account) => ({ ...account, account_balances: balanceByAccount.get(account.id) }));
   return <div className="space-y-6"><div><p className="text-sm text-muted-foreground">ยอดทั้งหมดคำนวณจาก ledger entries ที่ยืนยันแล้ว</p><h1 className="mt-1 text-2xl font-bold">บัญชี</h1></div>
     {(params.error || params.message) && <div role="status" className="rounded-xl border p-3 text-sm">{params.error ?? params.message}</div>}
     <div className="grid gap-5 xl:grid-cols-[1fr_380px]">

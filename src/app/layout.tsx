@@ -10,5 +10,5 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="th" suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: "try{document.documentElement.classList.toggle('dark',localStorage.getItem('pocketledger-theme')==='dark'||(!localStorage.getItem('pocketledger-theme')&&matchMedia('(prefers-color-scheme:dark)').matches))}catch{}" }} /></head><body className={noto.variable}>{children}</body></html>;
+  return <html lang="th" suppressHydrationWarning><body className={noto.variable}>{children}</body></html>;
 }

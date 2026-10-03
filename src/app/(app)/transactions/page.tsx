@@ -12,7 +12,7 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
   const params = await searchParams;
   const page = Math.max(1, Number(params.page) || 1);
   const { supabase, userId } = await requireUser();
-  let query = supabase.from("transactions").select("id,occurred_at,type,description,amount_satangs,status,source,accounts(name),transaction_splits(categories(name)),transaction_documents(document_id)", { count: "exact" }).eq("owner_id", userId).order("occurred_at", { ascending: false }).order("created_at", { ascending: false });
+  let query = supabase.from("transactions").select("id,occurred_at,type,description,amount_satangs,status,source,accounts:accounts!transactions_account_id_owner_id_fkey(name),transaction_splits(categories(name)),transaction_documents(document_id)", { count: "exact" }).eq("owner_id", userId).order("occurred_at", { ascending: false }).order("created_at", { ascending: false });
   if (params.q) query = query.ilike("description", `%${params.q.replaceAll("%", "\\%").replaceAll("_", "\\_")}%`);
   if (params.status) query = query.eq("status", params.status);
   if (params.type) query = query.eq("type", params.type);

@@ -10,7 +10,7 @@ export default async function TransactionDetail({ params }: { params: Promise<{ 
   const { id } = await params;
   const { supabase, userId } = await requireUser();
   const [transaction, audit] = await Promise.all([
-    supabase.from("transactions").select("*,accounts(name),transaction_splits(amount_satangs,categories(name)),transaction_documents(documents(id,original_name,storage_key,mime_type))").eq("id", id).eq("owner_id", userId).maybeSingle(),
+    supabase.from("transactions").select("*,accounts:accounts!transactions_account_id_owner_id_fkey(name),transaction_splits(amount_satangs,categories(name)),transaction_documents(documents(id,original_name,storage_key,mime_type))").eq("id", id).eq("owner_id", userId).maybeSingle(),
     supabase.from("audit_logs").select("id,event_type,reason,created_at,actor_id,correlation_id").eq("owner_id", userId).eq("entity_id", id).order("created_at", { ascending: false }),
   ]);
   if (transaction.error || audit.error) throw transaction.error ?? audit.error;
