@@ -17,7 +17,7 @@ export type Database = {
   public: {
     Tables: {
       profiles: Table<{ id: string; display_name: string | null; locale: string; timezone: string; created_at: string; updated_at: string }>;
-      accounts: Table<Entity & { name: string; type: "bank" | "cash" | "ewallet"; color: string; icon: string; opening_balance_satangs: string; opening_balance_date: string; is_active: boolean }>;
+      accounts: Table<Entity & { name: string; type: "bank" | "cash" | "ewallet" | "credit_card"; bank_id: string | null; bank_name: string | null; account_holder_name: string | null; account_number_last4: string | null; note: string | null; currency: "THB"; creation_key: string | null; color: string; icon: string; opening_balance_satangs: string; opening_balance_date: string; is_active: boolean }>;
       categories: Table<Entity & { name: string; kind: "income" | "expense"; color: string; icon: string }>;
       transactions: Table<Entity & { type: "income" | "expense" | "transfer" | "refund" | "adjustment" | "reversal"; status: "draft" | "posted" | "voided"; account_id: string | null; counter_account_id: string | null; amount_satangs: string; flow_direction: -1 | 1; occurred_at: string; description: string; note: string | null; payment_method: string | null; source: "manual" | "ocr" | "import"; original_transaction_id: string | null; replaces_transaction_id: string | null; reversal_transaction_id: string | null; idempotency_key: string; posted_at: string | null; voided_at: string | null }>;
       ledger_entries: Table<{ id: string; owner_id: string; transaction_id: string; account_id: string; amount_satangs: string; occurred_at: string; sequence: number; created_at: string }>;
@@ -31,11 +31,14 @@ export type Database = {
       audit_logs: Table<{ id: string; owner_id: string; actor_id: string; event_type: string; entity_type: string; entity_id: string; before_data: Json | null; after_data: Json | null; reason: string | null; correlation_id: string; created_at: string }>;
     };
     Views: {
+      account_ledger_export: { Row: { owner_id: string; account_id: string; transaction_id: string; occurred_at: string; transaction_created_at: string; delta_satangs: string; running_balance_satangs: string }; Relationships: [] };
       account_balances: { Row: { owner_id: string; account_id: string; balance_satangs: number; reserved_satangs: number; available_satangs: number }; Relationships: [] };
       monthly_cashflow: { Row: { owner_id: string; month_start: string; income_satangs: string; expense_satangs: string }; Relationships: [] };
       budget_status: { Row: { owner_id: string; budget_id: string; category_id: string | null; period_start: string; period_end: string; amount_satangs: string; spent_satangs: string; remaining_satangs: string }; Relationships: [] };
     };
     Functions: {
+      get_export_transaction_ids: { Args: { p_account_id?: string | null; p_from?: string | null; p_to?: string | null; p_types?: string[] | null; p_statuses?: string[] | null; p_category_ids?: string[] | null; p_tag_ids?: string[] | null; p_include_voided?: boolean; p_query?: string | null }; Returns: { id: string }[] };
+      record_export_audit: { Args: { p_format: string; p_filters: Json; p_account_ids: string[]; p_transaction_count: number }; Returns: string };
       post_transaction: { Args: { p_transaction_id: string; p_idempotency_key: string; p_correlation_id: string }; Returns: string };
       void_posted_transaction: { Args: { p_transaction_id: string; p_reason: string; p_idempotency_key: string; p_correlation_id: string }; Returns: string };
       create_transfer: { Args: { p_source_account_id: string; p_destination_account_id: string; p_amount_satangs: string; p_fee_satangs: string; p_occurred_at: string; p_description: string; p_idempotency_key: string; p_correlation_id: string }; Returns: string };

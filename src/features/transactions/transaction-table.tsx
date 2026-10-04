@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { tableFeatures, useTable, type ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
+import { BankLogo } from "@/features/accounts/bank-logo";
 import { formatSatangs } from "@/features/ledger/money";
 
-export type TransactionRow = { id: string; occurred_at: string; type: string; description: string; amount_satangs: string; status: string; source: string; accounts: { name: string } | { name: string }[] | null; transaction_splits: { categories: { name: string } | { name: string }[] | null }[]; transaction_documents: { document_id: string }[] };
+type TransactionAccount = { name: string; type: string; bank_id: string | null };
+export type TransactionRow = { id: string; occurred_at: string; type: string; description: string; amount_satangs: string; status: string; source: string; accounts: TransactionAccount | TransactionAccount[] | null; transaction_splits: { categories: { name: string } | { name: string }[] | null }[]; transaction_documents: { document_id: string }[] };
 
 const labels: Record<string, string> = { income: "รายรับ", expense: "รายจ่าย", transfer: "โอนเงิน", refund: "คืนเงิน", adjustment: "ปรับยอด", reversal: "กลับรายการ", draft: "ฉบับร่าง", posted: "ยืนยันแล้ว", voided: "ยกเลิก", manual: "บันทึกเอง", ocr: "OCR", import: "นำเข้า" };
 
@@ -15,7 +17,7 @@ const columns: ColumnDef<typeof features, TransactionRow>[] = [
   { accessorKey: "type", header: "ประเภท", cell: ({ row }) => labels[row.original.type] ?? row.original.type },
   { accessorKey: "description", header: "รายละเอียด", cell: ({ row }) => <Link href={`/transactions/${row.original.id}`} className="font-medium hover:text-primary hover:underline">{row.original.description}</Link> },
   { id: "category", header: "หมวดหมู่", cell: ({ row }) => row.original.transaction_splits.map((split) => Array.isArray(split.categories) ? split.categories[0]?.name : split.categories?.name).filter(Boolean).join(", ") || "—" },
-  { id: "account", header: "บัญชี", cell: ({ row }) => Array.isArray(row.original.accounts) ? row.original.accounts[0]?.name : row.original.accounts?.name ?? "—" },
+  { id: "account", header: "บัญชี", cell: ({ row }) => { const account = Array.isArray(row.original.accounts) ? row.original.accounts[0] : row.original.accounts; return account ? <span className="flex items-center gap-2">{account.type === "bank" && <BankLogo bankId={account.bank_id} className="size-8 rounded-lg" />}<span>{account.name}</span></span> : "—"; } },
   { id: "in", header: "เงินเข้า", cell: ({ row }) => ["income", "refund"].includes(row.original.type) ? <span className="font-semibold text-primary">{formatSatangs(row.original.amount_satangs)}</span> : "—" },
   { id: "out", header: "เงินออก", cell: ({ row }) => ["expense", "adjustment"].includes(row.original.type) ? <span className="font-semibold">{formatSatangs(row.original.amount_satangs)}</span> : "—" },
   { accessorKey: "status", header: "สถานะ", cell: ({ row }) => <Badge>{labels[row.original.status] ?? row.original.status}</Badge> },

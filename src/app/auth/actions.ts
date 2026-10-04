@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 
 const credentials = z.object({ email: z.email(), password: z.string().min(8) });
 
-function authError(message: string) {
+function authError(message: string): never {
   redirect(`/auth/login?error=${encodeURIComponent(message)}`);
 }
 
